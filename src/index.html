@@ -1,11 +1,630 @@
 <!DOCTYPE html>
-<html lang="en">
-    <head>
-        <meta charset="UTF-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>PakePlus</title>
-    </head>
-    <body>
-        Hello World
-    </body>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>多功能计算器</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "Segoe UI", "Microsoft YaHei", sans-serif;
+        }
+        body {
+            background: #1a1a1a;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 10px;
+        }
+
+        /* 密码弹窗样式 */
+        .login-wrap {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: #1a1a1a;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+        }
+        .login-box {
+            background: #2b2b2b;
+            padding: 30px;
+            border-radius: 8px;
+            width: 100%;
+            max-width: 360px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+        }
+        .login-box h2 {
+            color: #fff;
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 18px;
+        }
+        .login-input {
+            width: 100%;
+            padding: 14px;
+            font-size: 15px;
+            background: #444;
+            color: white;
+            border: 1px solid #555;
+            border-radius: 4px;
+            outline: none;
+            margin-bottom: 12px;
+        }
+        .pwd-btn-group {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+        .pwd-btn {
+            flex: 1;
+            padding: 14px;
+            border: none;
+            border-radius: 4px;
+            font-size: 15px;
+            cursor: pointer;
+        }
+        .btn-confirm {
+            background: #0078d7;
+            color: white;
+        }
+        .btn-clear {
+            background: #444;
+            color: white;
+        }
+        .tip {
+            color: #ff6767;
+            font-size: 13px;
+            text-align: center;
+            margin-top: 10px;
+            display: none;
+        }
+        .tip.show {
+            display: block;
+        }
+
+        /* 原有样式不变 */
+        .container {
+            background: #2b2b2b;
+            width: 100%;
+            max-width: 380px;
+            border-radius: 8px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+            overflow: hidden;
+            position: relative;
+            display: none;
+        }
+        h1 {
+            display: none;
+        }
+        .tab-buttons {
+            display: none;
+        }
+        .tab-content {
+            display: none;
+            padding: 0;
+            width: 100%;
+            min-height: 580px;
+        }
+        .tab-content.show {
+            display: block;
+        }
+        .calc-header {
+            background: #2b2b2b;
+            padding: 12px 16px;
+            display: flex;
+            align-items: center;
+            border-bottom: 1px solid #444;
+        }
+        .menu-btn {
+            width: 36px;
+            height: 36px;
+            background: transparent;
+            border: none;
+            color: #ccc;
+            font-size: 20px;
+            cursor: pointer;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .menu-btn:hover {
+            background: #444;
+            color: white;
+        }
+        .calc-title {
+            color: white;
+            font-size: 18px;
+            font-weight: 500;
+            margin-left: 16px;
+        }
+        .dropdown-menu {
+            position: absolute;
+            top: 60px;
+            left: 10px;
+            background: #333;
+            border: 1px solid #555;
+            border-radius: 4px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+            z-index: 999;
+            display: none;
+            width: 220px;
+        }
+        .dropdown-menu.show {
+            display: block;
+        }
+        .dropdown-menu button {
+            display: block;
+            width: 100%;
+            padding: 14px 16px;
+            border: none;
+            background: transparent;
+            text-align: left;
+            cursor: pointer;
+            font-size: 15px;
+            color: #eee;
+        }
+        .dropdown-menu button:hover {
+            background: #444;
+        }
+        .input-group {
+            margin-bottom: 16px;
+            padding: 0 16px;
+        }
+        label {
+            display: block;
+            margin-bottom: 6px;
+            color: #ccc;
+            font-weight: 400;
+            font-size: 14px;
+        }
+        input, select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #555;
+            border-radius: 4px;
+            font-size: 15px;
+            background: #444;
+            color: white;
+            outline: none;
+        }
+        input:focus, select:focus {
+            border-color: #0078d7;
+        }
+        .calc-btn {
+            background: #0078d7;
+            color: white;
+            border: none;
+            padding: 14px;
+            border-radius: 4px;
+            width: calc(100% - 32px);
+            margin: 0 16px;
+            font-size: 15px;
+            cursor: pointer;
+            margin-top: 8px;
+        }
+        .calc-btn:hover {
+            background: #005a9e;
+        }
+        .result {
+            margin: 16px;
+            padding: 16px;
+            background: #333;
+            border-radius: 4px;
+            font-size: 15px;
+            color: #eee;
+            line-height: 1.5;
+            min-height: 80px;
+            border: 1px solid #555;
+        }
+        .mark {
+            color: #ff6767;
+            font-size: 13px;
+            margin-top: 4px;
+            margin-bottom: 8px;
+            padding: 0 16px;
+        }
+        h2 {
+            font-size: 16px;
+            margin: 16px;
+            color: #eee;
+            text-align: left;
+        }
+        .win-calc {
+            width: 100%;
+            background: #2b2b2b;
+            border: none;
+            padding: 0;
+        }
+        .win-display {
+            width: 100%;
+            height: 140px;
+            background: #2b2b2b;
+            border: none;
+            text-align: right;
+            font-size: 56px;
+            font-weight: 300;
+            color: #ffffff;
+            padding: 20px 16px;
+            outline: none;
+        }
+        .mem-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 0 8px;
+            margin-bottom: 4px;
+        }
+        .mem-btn {
+            flex: 1;
+            text-align: center;
+            background: transparent;
+            border: none;
+            font-size: 15px;
+            color: #ccc;
+            cursor: pointer;
+            padding: 10px 0;
+        }
+        .mem-btn:hover {
+            background: #444;
+            color: white;
+        }
+        .win-buttons {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1px;
+            background: #1a1a1a;
+        }
+        .win-btn {
+            height: 70px;
+            font-size: 22px;
+            border: none;
+            background: #444;
+            color: white;
+            cursor: pointer;
+        }
+        .win-btn:hover {
+            background: #555;
+        }
+        .win-btn-gray {
+            background: #333;
+            color: #eee;
+        }
+        .win-btn-gray:hover {
+            background: #444;
+        }
+        .win-btn-blue {
+            background: #0078d7;
+            color: white;
+        }
+        .win-btn-blue:hover {
+            background: #005a9e;
+        }
+    </style>
+</head>
+<body>
+
+<!-- 密码登录界面 -->
+<div class="login-wrap" id="loginWrap">
+    <div class="login-box">
+        <h2>请输入密码</h2>
+        <input type="password" class="login-input" id="pwdInput">
+        <div class="pwd-btn-group">
+            <button class="pwd-btn btn-confirm" onclick="checkPwd()">确定</button>
+            <button class="pwd-btn btn-clear" onclick="clearPwd()">清除</button>
+        </div>
+        <div class="tip" id="pwdTip">密码错误，请重新输入！</div>
+    </div>
+</div>
+
+<!-- 计算器原有代码 完全不变 -->
+<div class="container" id="mainContainer">
+    <div class="calc-header">
+        <button class="menu-btn" onclick="toggleMenu()">☰</button>
+        <div class="calc-title">多功能计算器</div>
+    </div>
+
+    <div class="dropdown-menu" id="menu">
+        <button onclick="goTab(0)">标准计算器</button>
+        <button onclick="goTab(1)">角度计算</button>
+        <button onclick="goTab(2)">时钟计算</button>
+        <button onclick="goTab(3)">风向计算</button>
+        <button onclick="goTab(4)">三角形计算</button>
+    </div>
+
+    <div class="tab-content show" id="tab0">
+        <div class="win-calc">
+            <input type="text" id="winDisplay" class="win-display" value="0" readonly>
+            <div class="mem-row">
+                <button class="mem-btn">MC</button>
+                <button class="mem-btn">MR</button>
+                <button class="mem-btn">M+</button>
+                <button class="mem-btn">M-</button>
+                <button class="mem-btn">MS</button>
+                <button class="mem-btn">M∨</button>
+            </div>
+            <div class="win-buttons">
+                <button class="win-btn win-btn-gray" onclick="winPercent()">%</button>
+                <button class="win-btn win-btn-gray" onclick="winCE()">CE</button>
+                <button class="win-btn win-btn-gray" onclick="winC()">C</button>
+                <button class="win-btn win-btn-gray" onclick="winBack()">⌫</button>
+                <button class="win-btn" onclick="winReciprocal()">¹/ₓ</button>
+                <button class="win-btn" onclick="winSquare()">x²</button>
+                <button class="win-btn" onclick="winRoot()">²√x</button>
+                <button class="win-btn" onclick="winInput('/')">÷</button>
+                <button class="win-btn" onclick="winInput('7')">7</button>
+                <button class="win-btn" onclick="winInput('8')">8</button>
+                <button class="win-btn" onclick="winInput('9')">9</button>
+                <button class="win-btn" onclick="winInput('*')">×</button>
+                <button class="win-btn" onclick="winInput('4')">4</button>
+                <button class="win-btn" onclick="winInput('5')">5</button>
+                <button class="win-btn" onclick="winInput('6')">6</button>
+                <button class="win-btn" onclick="winInput('-')">−</button>
+                <button class="win-btn" onclick="winInput('1')">1</button>
+                <button class="win-btn" onclick="winInput('2')">2</button>
+                <button class="win-btn" onclick="winInput('3')">3</button>
+                <button class="win-btn" onclick="winInput('+')">+</button>
+                <button class="win-btn" onclick="winNeg()">+/−</button>
+                <button class="win-btn" onclick="winInput('0')">0</button>
+                <button class="win-btn" onclick="winInput('.')">.</button>
+                <button class="win-btn win-btn-blue" onclick="winCalc()">=</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="tab-content" id="tab1">
+        <h2>✅ 正北角度计算器</h2>
+        <div class="mark">✅ 备注：输入度数为顶角到某个点的度数</div>
+        <div class="input-group">
+            <label>① 已知一条边的角度（0°~360°）</label>
+            <input type="number" id="sideDeg" placeholder="例如：60、90、180">
+        </div>
+        <div class="input-group">
+            <label>② 计算方式</label>
+            <select id="calcType">
+                <option value="add">加夹角度数</option>
+                <option value="sub">减夹角度数</option>
+            </select>
+        </div>
+        <div class="input-group">
+            <label>③ 夹角度数（0°~360°）</label>
+            <input type="number" id="jiaoDeg" placeholder="例如：30、45、90">
+        </div>
+        <button class="calc-btn" onclick="calcNorthAngle()">计算另一条边度数</button>
+        <div class="result" id="northResult"></div>
+    </div>
+
+    <div class="tab-content" id="tab2">
+        <h2>24小时制 时针分针夹角</h2>
+        <div class="input-group">
+            <label>小时 (0-23)</label>
+            <input type="number" id="clockHour" min="0" max="23">
+        </div>
+        <div class="input-group">
+            <label>分钟 (0-59)</label>
+            <input type="number" id="clockMin" min="0" max="59">
+        </div>
+        <button class="calc-btn" onclick="calcClockAngle()">计算夹角</button>
+        <div class="result" id="clockResult"></div>
+    </div>
+
+    <div class="tab-content" id="tab3">
+        <h2>风向角度计算</h2>
+        <div class="input-group">
+            <label>来风方向（东北风=45°，正北=0°）</label>
+            <input type="number" id="windDir" min="0" max="360" placeholder="输入来风角度">
+        </div>
+        <div class="input-group">
+            <label>选择受风类型</label>
+            <select id="windType">
+                <option value="head">逆风</option>
+                <option value="tail">顺风</option>
+                <option value="left">正左侧风</option>
+                <option value="right">正右侧风</option>
+                <option value="lf">左前风</option>
+                <option value="lb">左后风</option>
+                <option value="rf">右前风</option>
+                <option value="rb">右后风</option>
+            </select>
+        </div>
+        <button class="calc-btn" onclick="calcWind()">计算风向角度</button>
+        <div class="result" id="windResult"></div>
+    </div>
+
+    <div class="tab-content" id="tab4">
+        <h2>✅ 通用三角形计算（正弦/余弦定理）</h2>
+        <div class="mark">✅ 标准三角形标注：角A对边a，角B对边b，角C对边c；输入任意3个求全部</div>
+        <div class="input-group">
+            <label>边 a → 对应：角A的对边</label>
+            <input type="number" id="tri_a" placeholder="留空自动计算">
+        </div>
+        <div class="input-group">
+            <label>边 b → 对应：角B的对边</label>
+            <input type="number" id="tri_b" placeholder="留空自动计算">
+        </div>
+        <div class="input-group">
+            <label>边 c → 对应：角C的对边</label>
+            <input type="number" id="tri_c" placeholder="留空自动计算">
+        </div>
+        <div class="input-group">
+            <label>角 A → 对应：边a的对角</label>
+            <input type="number" id="tri_angle" placeholder="留空自动计算">
+        </div>
+        <button class="calc-btn" onclick="calcRightTriangle()">计算全部</button>
+        <div class="result" id="triFinalResult"></div>
+    </div>
+</div>
+
+<script>
+    // 密码验证逻辑
+    const input = document.getElementById('pwdInput');
+    const tip = document.getElementById('pwdTip');
+    
+    // 检查密码
+    function checkPwd() {
+        if(input.value.trim() === 'qwe'){
+            document.getElementById('loginWrap').style.display = 'none';
+            document.getElementById('mainContainer').style.display = 'block';
+        }else{
+            tip.classList.add('show');
+        }
+    }
+    
+    // 清除输入框
+    function clearPwd() {
+        input.value = '';
+        tip.classList.remove('show');
+        input.focus();
+    }
+
+    // 回车确认
+    input.addEventListener('keydown', e => {
+        if(e.key === 'Enter') checkPwd();
+    });
+
+    // ================= 以下所有计算器代码 完全不变 =================
+    let currentTab = 0;
+    function switchTab(index) {
+        currentTab = index;
+        const tabs = document.querySelectorAll('.tab-content');
+        tabs.forEach((tab, i) => { tab.classList.toggle('show', i === index); });
+    }
+    function toggleMenu() { document.getElementById('menu').classList.toggle('show'); }
+    function goTab(index) { switchTab(index); document.getElementById('menu').classList.remove('show'); }
+
+    let winDisp = document.getElementById('winDisplay');
+    let winCurrent = '';
+    function winInput(v) {
+        if (winCurrent === '0' && v !== '.') winCurrent = v;
+        else { const last = winCurrent.slice(-1); if (['+', '-', '*', '/', '.'].includes(last) && ['+', '-', '*', '/', '.'].includes(v)) return; winCurrent += v; }
+        winDisp.value = winCurrent;
+    }
+    function winCE() { winCurrent = '0'; winDisp.value = '0'; }
+    function winC() { winCurrent = ''; winDisp.value = '0'; }
+    function winBack() { winCurrent = winCurrent.length>1 ? winCurrent.slice(0,-1) : '0'; winDisp.value = winCurrent; }
+    function winPercent() { winCurrent = (parseFloat(winCurrent)/100).toString(); winDisp.value = winCurrent; }
+    function winReciprocal() { winCurrent = (1/parseFloat(winCurrent)).toString(); winDisp.value = winCurrent; }
+    function winSquare() { winCurrent = Math.pow(parseFloat(winCurrent),2).toString(); winDisp.value = winCurrent; }
+    function winRoot() { winCurrent = Math.sqrt(parseFloat(winCurrent)).toString(); winDisp.value = winCurrent; }
+    function winNeg() { winCurrent = winCurrent.startsWith('-') ? winCurrent.slice(1) : '-'+winCurrent; winDisp.value = winCurrent; }
+    function winCalc() { try{let r=eval(winCurrent.replace('×','*').replace('÷','/')); winDisp.value=r; winCurrent=r.toString();}catch(e){winDisp.value='错误';} }
+
+    document.addEventListener('keydown',function(e){
+        if(currentTab!==0) return;
+        const k=e.key;
+        if('0123456789'.includes(k)){winInput(k); e.preventDefault();}
+        else if(k==='.'){winInput('.'); e.preventDefault();}
+        else if(k==='+'){winInput('+'); e.preventDefault();}
+        else if(k==='-'){winInput('-'); e.preventDefault();}
+        else if(k==='*'){winInput('*'); e.preventDefault();}
+        else if(k==='/'){winInput('/'); e.preventDefault();}
+        else if(k==='='||k==='Enter'){winCalc(); e.preventDefault();}
+        else if(k==='Backspace'){winBack(); e.preventDefault();}
+        else if(k==='Escape'){winC(); e.preventDefault();}
+        else if(k==='%'){winPercent(); e.preventDefault();}
+    });
+
+    function calcClockAngle(){
+        const h=parseInt(document.getElementById('clockHour').value);
+        const m=parseInt(document.getElementById('clockMin').value);
+        if(isNaN(h)||isNaN(m)||h<0||h>23||m<0||m>59){document.getElementById('clockResult').innerText='请输入有效时间！';return;}
+        const ha=(h%12)*30+m*0.5; const ma=m*6; let a=Math.abs(ha-ma); a=Math.min(a,360-a);
+        document.getElementById('clockResult').innerText=`时间：${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}\n夹角：${a.toFixed(2)}°`;
+    }
+
+    function calcWind(){
+        const w=parseFloat(document.getElementById('windDir').value);
+        const t=document.getElementById('windType').value;
+        if(isNaN(w)||w<0||w>360){document.getElementById('windResult').innerText='请输入0-360°有效角度';return;}
+        let a;
+        switch(t){
+            case'head':a=w;break;case'tail':a=(w+180)%360;break;case'left':a=(w+90)%360;break;case'right':a=(w+270)%360;break;
+            case'lf':a=(w+45)%360;break;case'lb':a=(w+135)%360;break;case'rf':a=(w+315)%360;break;case'rb':a=(w+225)%360;break;
+        }
+        document.getElementById('windResult').innerText=`来风角度：${w}°\n受风类型：${document.getElementById('windType').selectedOptions[0].text}\n✅ 计算风向角度：${a.toFixed(0)}°`;
+    }
+
+    function calcNorthAngle(){
+        const s=parseFloat(document.getElementById('sideDeg').value);
+        const j=parseFloat(document.getElementById('jiaoDeg').value);
+        const t=document.getElementById('calcType').value;
+        if(isNaN(s)||isNaN(j)||s<0||s>360||j<0||j>360){document.getElementById('northResult').innerText='请输入0~360有效角度！';return;}
+        let res=t==='add'?(s+j)%360:(s-j+360)%360;
+        document.getElementById('northResult').innerText=`已知边角度：${s}°\n计算方式：${t==='add'?'加':'减'} ${j}°\n----------------\n✅ 另一条边角度：${res.toFixed(0)}°`;
+    }
+
+    function calcRightTriangle() {
+        let a = parseFloat(document.getElementById('tri_a').value) || 0;
+        let b = parseFloat(document.getElementById('tri_b').value) || 0;
+        let c = parseFloat(document.getElementById('tri_c').value) || 0;
+        let A = parseFloat(document.getElementById('tri_angle').value) || 0;
+
+        let validCount = 0;
+        if (a > 0) validCount++;
+        if (b > 0) validCount++;
+        if (c > 0) validCount++;
+        if (A > 0) validCount++;
+
+        if (validCount < 3) {
+            document.getElementById('triFinalResult').innerText = "请输入任意 3 个有效数据！\n（边a、边b、边c、角A 选 3 个填写）";
+            return;
+        }
+
+        let angleB, angleC;
+        try {
+            if (a > 0 && b > 0 && c > 0) {
+                const cosA = (b*b + c*c - a*a) / (2*b*c);
+                A = Math.acos(Math.max(-1, Math.min(1, cosA))) * 180 / Math.PI;
+                const cosB = (a*a + c*c - b*b) / (2*a*c);
+                angleB = Math.acos(Math.max(-1, Math.min(1, cosB))) * 180 / Math.PI;
+                angleC = 180 - A - angleB;
+            }
+            else if (a > 0 && b > 0 && A > 0) {
+                const radA = A * Math.PI / 180;
+                const sinB = (b * Math.sin(radA)) / a;
+                angleB = Math.asin(Math.max(-1, Math.min(1, sinB))) * 180 / Math.PI;
+                angleC = 180 - A - angleB;
+                const radC = angleC * Math.PI / 180;
+                c = (a * Math.sin(radC)) / Math.sin(radA);
+            }
+            else if (a > 0 && c > 0 && A > 0) {
+                const radA = A * Math.PI / 180;
+                const sinC = (c * Math.sin(radA)) / a;
+                angleC = Math.asin(Math.max(-1, Math.min(1, sinC))) * 180 / Math.PI;
+                angleB = 180 - A - angleC;
+                const radB = angleB * Math.PI / 180;
+                b = (a * Math.sin(radB)) / Math.sin(radA);
+            }
+            else if (b > 0 && c > 0 && A > 0) {
+                const radA = A * Math.PI / 180;
+                a = Math.sqrt(b*b + c*c - 2*b*c*Math.cos(radA));
+                const sinB = (b * Math.sin(radA)) / a;
+                angleB = Math.asin(Math.max(-1, Math.min(1, sinB))) * 180 / Math.PI;
+                angleC = 180 - A - angleB;
+            }
+            else {
+                document.getElementById('triFinalResult').innerText = "无法计算，请检查输入";
+                return;
+            }
+        } catch (e) {
+            document.getElementById('triFinalResult').innerText = "输入数据无法构成三角形";
+            return;
+        }
+
+        document.getElementById('triFinalResult').innerText =
+`✅ 通用三角形计算完成
+----------------
+边a = ${a.toFixed(2)}  【对应：角A的对边】
+边b = ${b.toFixed(2)}  【对应：角B的对边】
+边c = ${c.toFixed(2)}  【对应：角C的对边】
+角A = ${A.toFixed(2)}° 【对应：边a的对角】
+角B = ${angleB.toFixed(2)}°【对应：边b的对角】
+角C = ${angleC.toFixed(2)}°【对应：边c的对角】`;
+    }
+</script>
+</body>
 </html>
